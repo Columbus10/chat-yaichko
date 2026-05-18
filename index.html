@@ -187,7 +187,33 @@ function deleteChat(i, e) {
   update();
 }
 
-function send() {
+async function send() {
+  const input = document.getElementById("input");
+  if (!input.value) return;
+
+  const text = input.value;
+
+  chats[current].push({ type: "user", text: "Ты: " + text });
+
+  const res = await fetch("http://localhost:3000/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: text })
+  });
+
+  const data = await res.json();
+
+  chats[current].push({
+    type: "bot",
+    text: data.reply
+  });
+
+  input.value = "";
+  save();
+  renderMessages();
+}
   const input = document.getElementById("input");
   if (!input.value) return;
 
