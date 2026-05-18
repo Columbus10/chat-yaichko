@@ -5,54 +5,66 @@
 <title>Chat Yaichko 🥚</title>
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:Arial; }
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: Arial;
+}
 
 body {
   display:flex;
   height:100vh;
+  background:#f6f6f6;
 }
 
 /* SIDEBAR */
 .sidebar {
-  width:260px;
-  background:#111;
+  width:280px;
+  background:#1e1e1e;
   color:white;
-  padding:10px;
+  padding:12px;
   display:flex;
   flex-direction:column;
+  gap:10px;
 }
 
-.top {
-  display:flex;
-  gap:5px;
+.title {
+  font-size:18px;
+  font-weight:bold;
   margin-bottom:10px;
 }
 
-.top button {
-  flex:1;
-  padding:8px;
+.newChat {
+  padding:10px;
   border:none;
+  border-radius:10px;
   cursor:pointer;
-  border-radius:6px;
+  background:#2d2d2d;
+  color:white;
 }
 
 .chat {
-  padding:10px;
-  background:#222;
-  margin:5px 0;
-  border-radius:8px;
+  padding:12px;
+  background:#2a2a2a;
+  border-radius:12px;
   cursor:pointer;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  transition:0.2s;
+}
+
+.chat:hover {
+  background:#3a3a3a;
 }
 
 .chat.active {
   background:#555;
 }
 
-.delete {
-  color:red;
+.del {
+  color:#ff4d4d;
   cursor:pointer;
 }
 
@@ -61,43 +73,64 @@ body {
   flex:1;
   display:flex;
   flex-direction:column;
-  background:#f3f3f3;
 }
 
+/* HEADER */
+.header {
+  padding:15px;
+  background:white;
+  border-bottom:1px solid #ddd;
+  font-weight:bold;
+}
+
+/* MESSAGES */
 .messages {
   flex:1;
-  padding:15px;
+  padding:20px;
   overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 
 .msg {
   max-width:60%;
-  padding:10px;
-  margin:5px 0;
-  border-radius:10px;
+  padding:12px;
+  border-radius:18px;
+  line-height:1.4;
 }
 
-.user { background:#cfe8ff; margin-left:auto; }
-.bot { background:white; }
+.user {
+  background:#d7ebff;
+  align-self:flex-end;
+}
 
-.input {
+.bot {
+  background:white;
+  border:1px solid #eee;
+}
+
+/* INPUT */
+.inputArea {
   display:flex;
-  padding:10px;
-  background:#ddd;
+  padding:12px;
+  background:white;
+  border-top:1px solid #ddd;
 }
 
 input {
   flex:1;
-  padding:10px;
-  border:none;
-  border-radius:8px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  outline:none;
 }
 
 button {
   margin-left:10px;
-  padding:10px;
+  padding:12px 16px;
   border:none;
-  border-radius:8px;
+  border-radius:12px;
   background:black;
   color:white;
   cursor:pointer;
@@ -108,20 +141,18 @@ button {
 <body>
 
 <div class="sidebar">
-
-  <div class="top">
-    <button onclick="addChat()">➕</button>
-  </div>
-
+  <div class="title">Chat Yaichko 🥚</div>
+  <button class="newChat" onclick="newChat()">+ Новый чат</button>
   <div id="chatList"></div>
-
 </div>
 
 <div class="main">
 
+  <div class="header">Общий чат</div>
+
   <div class="messages" id="messages"></div>
 
-  <div class="input">
+  <div class="inputArea">
     <input id="input" placeholder="Напиши сообщение...">
     <button onclick="send()">➤</button>
   </div>
@@ -130,54 +161,67 @@ button {
 
 <script>
 
-let chats = [];
+let chats = JSON.parse(localStorage.getItem("chats")) || [[]];
 let current = 0;
 
-function init() {
-  addChat();
-  renderChats();
-  renderMessages();
+function save() {
+  localStorage.setItem("chats", JSON.stringify(chats));
 }
 
-function addChat() {
+function newChat() {
   chats.push([]);
   current = chats.length - 1;
-  renderChats();
-  renderMessages();
-}
-
-function deleteChat(i, e) {
-  e.stopPropagation();
-
-  chats.splice(i,1);
-
-  if (chats.length === 0) {
-    addChat();
-  }
-
-  current = 0;
-  renderChats();
-  renderMessages();
+  update();
 }
 
 function switchChat(i) {
   current = i;
-  renderChats();
+  update();
+}
+
+function deleteChat(i, e) {
+  e.stopPropagation();
+  chats.splice(i,1);
+  if (chats.length === 0) chats = [[]];
+  current = 0;
+  update();
+}
+
+function send() {
+  const input = document.getElementById("input");
+  if (!input.value) return;
+
+  chats[current].push({type:"user", text:"Ты: " + input.value});
+  chats[current].push({type:"bot", text:"🥚 Яичко: " + brain(input.value)});
+
+  input.value = "";
+  save();
   renderMessages();
+}
+
+function brain(t) {
+  const a = [
+    "я думаю над этим 🤔",
+    "интересно...",
+    "я пока учусь 🥚",
+    "хорошая мысль",
+    "я не уверен, но звучит умно"
+  ];
+  return a[Math.floor(Math.random()*a.length)];
 }
 
 function renderChats() {
   const list = document.getElementById("chatList");
   list.innerHTML = "";
 
-  chats.forEach((c, i) => {
+  chats.forEach((c,i)=>{
     const div = document.createElement("div");
-    div.className = "chat" + (i === current ? " active" : "");
-    div.onclick = () => switchChat(i);
+    div.className = "chat" + (i===current?" active":"");
+    div.onclick = ()=>switchChat(i);
 
     div.innerHTML = `
       <span>Чат ${i+1}</span>
-      <span class="delete" onclick="deleteChat(${i}, event)">✖</span>
+      <span class="del" onclick="deleteChat(${i},event)">✖</span>
     `;
 
     list.appendChild(div);
@@ -188,7 +232,7 @@ function renderMessages() {
   const box = document.getElementById("messages");
   box.innerHTML = "";
 
-  chats[current].forEach(m => {
+  chats[current].forEach(m=>{
     const div = document.createElement("div");
     div.className = "msg " + m.type;
     div.innerText = m.text;
@@ -198,29 +242,13 @@ function renderMessages() {
   box.scrollTop = box.scrollHeight;
 }
 
-function send() {
-  const input = document.getElementById("input");
-  if (!input.value) return;
-
-  chats[current].push({type:"user", text:"Ты: " + input.value});
-  chats[current].push({type:"bot", text:"🥚 Яичко: " + fake(input.value)});
-
-  input.value = "";
+function update() {
+  save();
+  renderChats();
   renderMessages();
 }
 
-function fake(text) {
-  const a = [
-    "интересно 🤔",
-    "я подумаю 🥚",
-    "я ещё маленькое яйцо",
-    "звучит сложно",
-    "хорошая идея!"
-  ];
-  return a[Math.floor(Math.random()*a.length)];
-}
-
-init();
+update();
 
 </script>
 
