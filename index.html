@@ -1,24 +1,184 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Chat Yaichko 🥚</title>
+<meta charset="UTF-8">
+<title>Chat Yaichko 🥚</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background: #111;
+  color: white;
+  padding: 10px;
+}
+
+.chat {
+  padding: 10px;
+  margin: 8px 0;
+  background: #222;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.chat:hover {
+  background: #333;
+}
+
+.chat.active {
+  background: #555;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f3f3f3;
+}
+
+/* messages */
+.messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.msg {
+  max-width: 60%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 10px;
+}
+
+.user {
+  background: #d1e7ff;
+  margin-left: auto;
+}
+
+.bot {
+  background: white;
+}
+
+/* input */
+.inputArea {
+  display: flex;
+  padding: 10px;
+  background: #ddd;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 10px 15px;
+  border: none;
+  background: black;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+</style>
 </head>
-<body style="text-align:center; font-family:Arial; margin-top:50px;">
 
-  <h1>Chat Yaichko 🥚</h1>
-  <p>Скоро здесь будет нейросеть</p>
+<body>
 
-  <input id="input" placeholder="Напиши что-нибудь">
-  <button onclick="reply()">Отправить</button>
+<div class="sidebar">
+  <h3>Чаты 🥚</h3>
+  <div class="chat active" onclick="switchChat(0)">Общий</div>
+  <div class="chat" onclick="switchChat(1)">Учёба</div>
+  <div class="chat" onclick="switchChat(2)">Мемы</div>
+</div>
 
-  <p id="output"></p>
+<div class="main">
 
-  <script>
-    function reply() {
-      const text = document.getElementById("input").value;
-      document.getElementById("output").innerText = "Яичко думает... 🥚";
-    }
-  </script>
+  <div class="messages" id="messages"></div>
+
+  <div class="inputArea">
+    <input id="input" placeholder="Напиши сообщение...">
+    <button onclick="send()">➤</button>
+  </div>
+
+</div>
+
+<script>
+let currentChat = 0;
+
+const chats = [
+  [],
+  [],
+  []
+];
+
+function render() {
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
+
+  chats[currentChat].forEach(m => {
+    const div = document.createElement("div");
+    div.className = "msg " + m.type;
+    div.innerText = m.text;
+    box.appendChild(div);
+  });
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function send() {
+  const input = document.getElementById("input");
+  if (!input.value) return;
+
+  chats[currentChat].push({ type: "user", text: "Ты: " + input.value });
+
+  chats[currentChat].push({
+    type: "bot",
+    text: "🥚 Яичко: " + fakeBrain(input.value)
+  });
+
+  input.value = "";
+  render();
+}
+
+function fakeBrain(text) {
+  const answers = [
+    "интересно 🤔",
+    "я подумаю над этим 🥚",
+    "я пока учусь, но это звучит круто",
+    "хм... не знаю, но мне нравится",
+    "это слишком сложно для моего яйца 🥚"
+  ];
+  return answers[Math.floor(Math.random() * answers.length)];
+}
+
+function switchChat(i) {
+  currentChat = i;
+
+  document.querySelectorAll(".chat").forEach((c, idx) => {
+    c.classList.toggle("active", idx === i);
+  });
+
+  render();
+}
+
+render();
+</script>
 
 </body>
 </html>
