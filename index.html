@@ -6,134 +6,112 @@
 
 <style>
 * {
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   font-family: Arial;
 }
 
 body {
-  display:flex;
-  height:100vh;
-  background:#f6f6f6;
+  display: flex;
+  height: 100vh;
+  background: #f6f6f6;
 }
 
 /* SIDEBAR */
 .sidebar {
-  width:280px;
-  background:#1e1e1e;
-  color:white;
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+  width: 280px;
+  background: #1e1e1e;
+  color: white;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
 }
 
 .title {
-  font-size:18px;
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
-.newChat {
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  background:#2d2d2d;
-  color:white;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
 .chat {
-  padding:12px;
-  background:#2a2a2a;
-  border-radius:12px;
-  cursor:pointer;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  transition:0.2s;
-}
-
-.chat:hover {
-  background:#3a3a3a;
+  padding: 12px;
+  margin: 6px 0;
+  background: #2a2a2a;
+  border-radius: 12px;
+  cursor: pointer;
 }
 
 .chat.active {
-  background:#555;
-}
-
-.del {
-  color:#ff4d4d;
-  cursor:pointer;
+  background: #555;
 }
 
 /* MAIN */
 .main {
-  flex:1;
-  display:flex;
-  flex-direction:column;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* HEADER */
 .header {
-  padding:15px;
-  background:white;
-  border-bottom:1px solid #ddd;
-  font-weight:bold;
+  padding: 15px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  font-weight: bold;
 }
 
 /* MESSAGES */
 .messages {
-  flex:1;
-  padding:20px;
-  overflow:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .msg {
-  max-width:60%;
-  padding:12px;
-  border-radius:18px;
-  line-height:1.4;
+  max-width: 60%;
+  padding: 12px;
+  border-radius: 16px;
+  line-height: 1.4;
 }
 
 .user {
-  background:#d7ebff;
-  align-self:flex-end;
+  background: #d7ebff;
+  align-self: flex-end;
 }
 
 .bot {
-  background:white;
-  border:1px solid #eee;
+  background: white;
+  border: 1px solid #eee;
 }
 
 /* INPUT */
 .inputArea {
-  display:flex;
-  padding:12px;
-  background:white;
-  border-top:1px solid #ddd;
+  display: flex;
+  padding: 12px;
+  background: white;
+  border-top: 1px solid #ddd;
 }
 
 input {
-  flex:1;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid #ddd;
-  outline:none;
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  outline: none;
 }
 
 button {
-  margin-left:10px;
-  padding:12px 16px;
-  border:none;
-  border-radius:12px;
-  background:black;
-  color:white;
-  cursor:pointer;
+  margin-left: 10px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  background: black;
+  color: white;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -142,13 +120,12 @@ button {
 
 <div class="sidebar">
   <div class="title">Chat Yaichko 🥚</div>
-  <button class="newChat" onclick="newChat()">+ Новый чат</button>
-  <div id="chatList"></div>
+  <div class="chat active">Общий чат</div>
 </div>
 
 <div class="main">
 
-  <div class="header">Общий чат</div>
+  <div class="header">Чат</div>
 
   <div class="messages" id="messages"></div>
 
@@ -160,31 +137,20 @@ button {
 </div>
 
 <script>
+let messages = [];
 
-let chats = JSON.parse(localStorage.getItem("chats")) || [[]];
-let current = 0;
+function render() {
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
 
-function save() {
-  localStorage.setItem("chats", JSON.stringify(chats));
-}
+  messages.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "msg " + m.type;
+    div.innerText = m.text;
+    box.appendChild(div);
+  });
 
-function newChat() {
-  chats.push([]);
-  current = chats.length - 1;
-  update();
-}
-
-function switchChat(i) {
-  current = i;
-  update();
-}
-
-function deleteChat(i, e) {
-  e.stopPropagation();
-  chats.splice(i,1);
-  if (chats.length === 0) chats = [[]];
-  current = 0;
-  update();
+  box.scrollTop = box.scrollHeight;
 }
 
 async function send() {
@@ -193,7 +159,8 @@ async function send() {
 
   const text = input.value;
 
-  chats[current].push({ type: "user", text: "Ты: " + text });
+  messages.push({ type: "user", text: "Ты: " + text });
+  render();
 
   const res = await fetch("http://localhost:3000/chat", {
     method: "POST",
@@ -205,77 +172,12 @@ async function send() {
 
   const data = await res.json();
 
-  chats[current].push({
-    type: "bot",
-    text: data.reply
-  });
-
+  messages.push({ type: "bot", text: data.reply });
   input.value = "";
-  save();
-  renderMessages();
-}
-  const input = document.getElementById("input");
-  if (!input.value) return;
-
-  chats[current].push({type:"user", text:"Ты: " + input.value});
-  chats[current].push({type:"bot", text:"🥚 Яичко: " + brain(input.value)});
-
-  input.value = "";
-  save();
-  renderMessages();
+  render();
 }
 
-function brain(t) {
-  const a = [
-    "я думаю над этим 🤔",
-    "интересно...",
-    "я пока учусь 🥚",
-    "хорошая мысль",
-    "я не уверен, но звучит умно"
-  ];
-  return a[Math.floor(Math.random()*a.length)];
-}
-
-function renderChats() {
-  const list = document.getElementById("chatList");
-  list.innerHTML = "";
-
-  chats.forEach((c,i)=>{
-    const div = document.createElement("div");
-    div.className = "chat" + (i===current?" active":"");
-    div.onclick = ()=>switchChat(i);
-
-    div.innerHTML = `
-      <span>Чат ${i+1}</span>
-      <span class="del" onclick="deleteChat(${i},event)">✖</span>
-    `;
-
-    list.appendChild(div);
-  });
-}
-
-function renderMessages() {
-  const box = document.getElementById("messages");
-  box.innerHTML = "";
-
-  chats[current].forEach(m=>{
-    const div = document.createElement("div");
-    div.className = "msg " + m.type;
-    div.innerText = m.text;
-    box.appendChild(div);
-  });
-
-  box.scrollTop = box.scrollHeight;
-}
-
-function update() {
-  save();
-  renderChats();
-  renderMessages();
-}
-
-update();
-
+render();
 </script>
 
 </body>
